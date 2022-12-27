@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * Simple MQTT Producer using the library Eclipse Paho
+ * Simple MQTT Publisher using the library Eclipse Paho
  *
  * @author Riccardo Prevedi
  * @created 26/12/2022 - 17:56
