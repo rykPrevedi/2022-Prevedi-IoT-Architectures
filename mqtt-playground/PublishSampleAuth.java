@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
+ * Simple MQTT Producer using the library Eclipse Paho
+ *
  * @author Riccardo Prevedi
  * @created 26/12/2022 - 17:56
  * @project MQTT-client-java
@@ -14,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class PublishSampleAuth {
 
     private static final Logger logger = LoggerFactory.getLogger(PublishSampleAuth.class);
-    private static final String broker = "tcp://192.168.10.89:1883";
+    private static final String broker = "tcp://localhost:1883";
     private static final String username = "riccardo";
     private static final String password = "olacico";
     private static final String clientId = "publish_client";
