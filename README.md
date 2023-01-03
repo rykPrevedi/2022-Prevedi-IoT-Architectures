@@ -1,2 +1,2 @@
-# tirocinio-emqx
-Ho iniziato a fare dei test per connettere dei client Java al Broker EMQX
+# tirocinio-emqx-hono
+Simulazione di dispositivi per scambiare messaggi con Hono e con EMQX 
