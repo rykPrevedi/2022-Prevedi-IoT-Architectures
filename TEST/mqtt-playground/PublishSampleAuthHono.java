@@ -1,4 +1,4 @@
-package it.unimore.tirocinio.emqx.mqtt.client;
+package it.unimore.tirocinio.hono.mqtt.client;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -6,21 +6,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * Simple MQTT Publisher using the library Eclipse Paho
- *
  * @author Riccardo Prevedi
  * @created 26/12/2022 - 17:56
  * @project MQTT-client-java
  */
 
-public class PublishSampleAuth {
+public class PublishSampleAuthHono {
 
     private static final Logger logger = LoggerFactory.getLogger(PublishSampleAuth.class);
-    private static final String broker = "tcp://localhost:1883";
-    private static final String username = "riccardo";
-    private static final String password = "olacico";
-    private static final String clientId = "publish_client";
+    private static final String mqttAdapter = "tcp://10.108.35.62:1883";	// MQTT adapter IP address and port
+    private static final String username = "mydevice@mytenant";				
+    private static final String password = "mypassword";					// required for authentication by the protocol adapter
+    private static final String clientId = "publish_client";				// Client ID required by the MQTT protocol
     private static final String payload = "Hello MQTT";
     private static final String topic = "mqtt/test";
     private static final int qos = 0;
@@ -28,7 +25,7 @@ public class PublishSampleAuth {
     public static void main(String[] args) {
         logger.info("test client started...");
         try {
-            IMqttClient mqttClient = new MqttClient(broker, clientId, new MemoryPersistence());
+            IMqttClient mqttClient = new MqttClient(mqttAdapter, clientId, new MemoryPersistence());
             // connect options
             MqttConnectOptions options = new MqttConnectOptions();
             options.setCleanSession(true);
