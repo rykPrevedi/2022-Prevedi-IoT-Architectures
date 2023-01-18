@@ -3,7 +3,6 @@ package it.unimore.tirocinio.prevedi.iot.architectures.quickstartjava;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
-import kong.unirest.UnirestParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,9 @@ import org.slf4j.LoggerFactory;
 public class RegisterDevice {
 
     private static final Logger logger = LoggerFactory.getLogger(RegisterDevice.class);
-    private String registryUrl = null;   //"http://192.168.181.13:32774"
+    private String registryUrl = null;   //"http://192.168.181.13:28080"
+    private String tenantId = null;
+    private String deviceId = null;
 
     public RegisterDevice(String registryBaseUrl) {
         this.registryUrl = registryBaseUrl;
@@ -28,94 +29,85 @@ public class RegisterDevice {
     public static void main(String[] args) {
 
         // Adding a new tenant to the Device Registry
-        RegisterDevice deviceRegistry = new RegisterDevice("http://192.168.181.13:32774");
+        RegisterDevice deviceRegistry = new RegisterDevice("http://192.168.181.13:1080");
 
         // Register Tenant
-        String tenantId = deviceRegistry.createTenant("/v1/tenants");
-        System.out.println("Registered tenant: " + tenantId);
+        deviceRegistry.createTenant("/v1/tenants");
+        System.out.println("Registered tenant: " + deviceRegistry.getTenantId());
 
         // Add Device to Tenant
-        String deviceId = deviceRegistry.addingDevice("/v1/devices", tenantId);
-        System.out.println("Registered device: " + deviceId);
+        deviceRegistry.addDevice("/v1/devices");
+        System.out.println("Registered device: " + deviceRegistry.getDeviceId());
 
         // Set Device Password
+    }
+
+    /**
+     * Create a new tenant with an auto-generated-ID
+     *
+     * @param resourcePath route parameter "/v1/tenants"
+     */
+    public void createTenant(String resourcePath) {
+
+        // Making the POST Request. Requests are made when as[Type]() is invoked,
+        // No error are made if response was a 200-series and body processing was successful.
+        Unirest.post(resourcePath)
+                .header("accept", "application/json")
+                .header("content-type", "application/json")
+                .body("{\"ext\": {\"messaging-type\": \"amqp\"}}")
+                .asJson()
+                .ifSuccess(jsonNodeHttpResponse -> setTenantId(jsonNodeHttpResponse.getBody().getObject().get("id").toString()))
+                .ifFailure(jsonNodeHttpResponse -> {
+                    logger.error("Oh No! Status {}", jsonNodeHttpResponse.getStatus());
+                    jsonNodeHttpResponse.getParsingError().ifPresent(exception -> {
+                        logger.error("Parsing Exception: ", exception);
+                        logger.error("Original body: {}", exception.getOriginalBody());
+                    });
+                });
     }
 
     /**
      * Create a new device registration with auto-generated ID
      *
      * @param resourcePath route parameter "/v1/devices"
-     * @param tenantId     route parameter added dynamically
-     * @return tenant ID
      */
-    public String addingDevice(String resourcePath, String tenantId) {
+    public void addDevice(String resourcePath) {
 
-        // Making the POST Request. Requests are made when as[Type]() is invoked.
-        // Sometimes you want to add dynamic parameters in the URL
         HttpResponse<JsonNode> device = Unirest.post(resourcePath + "/{tenantId}")
-                .routeParam("tenantId", tenantId)
+                .routeParam("tenantId", this.tenantId)
                 .header("content-type", "application/json")
                 .asJson();
 
-        if (device.getBody() != null && device.isSuccess())  // true if the response was a 200-series
-        {
-            // Extract the value from the key "id" of the tenant Object
-            return device.getBody().getObject().get("id").toString();
+        if (device.isSuccess())
+            setDeviceId(device.getBody().getObject().get("id").toString());
+        else
+            logger.error("Oh No! Status {}", device.getStatus());
+            device.getParsingError().ifPresent(e -> {
+                logger.error("Parsing Exception: ", e);
+                logger.error("Original body: {}", e.getOriginalBody());
+            });
+    }
 
-        } else {
+    public void setPassword(String resourcePath, String password){
+        Unirest.put()
 
-            // the asJson request BODY could be null.
-            // Get the error and the original body for inspection.
-            UnirestParsingException ex = device.getParsingError().get();
-
-            logger.error("""
-
-
-                    Error executing the request !
-
-                    Original body: {}
-                    Status Code: {}
-                    Exception occurred : {}
-                    """, ex.getOriginalBody(), device.getStatus(), ex.getMessage());
-            return null;
-        }
     }
 
 
-    /**
-     * Create a new tenant with an auto-generated-ID
-     *
-     * @param resourcePath route parameter "/v1/tenants"
-     * @return tenant ID
-     */
-    public String createTenant(String resourcePath) {
 
-        // Making the POST Request. Requests are made when as[Type]() is invoked,
-        HttpResponse<JsonNode> tenant = Unirest.post(resourcePath)
-                .header("content-type", "application/json")
-                .body("{\"ext\": {\"messaging-type\": \"amqp\"}}")
-                .asJson();
+    public String getTenantId() {
+        return tenantId;
+    }
 
-        if (tenant.getBody() != null && tenant.isSuccess())  // true if the response was a 200-series
-        {
-            // Extract the value from the key "id" of the tenant Object
-            return tenant.getBody().getObject().get("id").toString();
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
 
-        } else {
-            // the asJson request BODY could be null.
-            // Get the error and the original body for inspection.
-            UnirestParsingException ex = tenant.getParsingError().get();
+    public String getDeviceId() {
+        return deviceId;
+    }
 
-            logger.error("""
-
-
-                    Error executing the request !
-
-                    Original body: {}
-                    Status Code: {}
-                    Exception occurred : {}
-                    """, ex.getOriginalBody(), tenant.getStatus(), ex.getMessage());
-            return null;
-        }
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }
